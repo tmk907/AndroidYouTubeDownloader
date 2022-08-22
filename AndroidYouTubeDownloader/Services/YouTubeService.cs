@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using AndroidYouTubeDownloader.ViewModels;
 using YouTubeStreamsExtractor;
 
 namespace AndroidYouTubeDownloader.Services
 {
-    internal class YouTubeService
+    public class YouTubeService
     {
         private readonly YouTubeStreams _youTubeStreams;
 

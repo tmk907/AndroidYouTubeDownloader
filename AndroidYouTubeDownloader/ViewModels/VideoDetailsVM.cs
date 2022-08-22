@@ -1,6 +1,6 @@
 ﻿namespace AndroidYouTubeDownloader.ViewModels
 {
-    class VideoDetailsVM
+    public class VideoDetailsVM
     {
         public string Title { get; init; }
         public string Channel { get; init; }

@@ -29,15 +29,16 @@ namespace AndroidYouTubeDownloader
     [IntentFilter(new[] { Intent.ActionSend }, Categories = new[] { Intent.CategoryDefault }, DataMimeTypes = new[] { "text/plain", })]
     public class MainActivity : Activity
     {
-        private static string sharedUrl = "";
-
         private DownloadItemsAdapter _downloadItemsAdapter;
         private CircularProgressIndicator _progressBar;
         private ConstraintLayout _container;
         private TabLayout _tabLayout;
         private LinearProgressIndicator _downloadProgressBar;
 
+        private VideoDataVM VideoDataVM;
+        
         private YouTubeService _youtubeService;
+        private DownloadService _downloadService;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -66,11 +67,30 @@ namespace AndroidYouTubeDownloader
             _downloadItemsAdapter.ItemClick += OnItemClick;
 
             _youtubeService = new YouTubeService();
+            _downloadService = new DownloadService(ApplicationContext,_youtubeService);
+            _downloadService.OnDownloadProgressChanged += OnDownloadProgressChanged;
+            _downloadService.OnDownloadError += OnDownloadError;
+            _downloadService.OnDownloadFinished += OnDownloadFinished;
 
             HandleIntent();
 #if DEBUG
             HandleIntentTest();
 #endif
+        }
+
+        private void OnDownloadFinished()
+        {
+            ShowSnakcbar("Download finished");
+        }
+
+        private void OnDownloadError(Exception ex)
+        {
+            ShowSnakcbar($"Download error {ex.Message}");
+        }
+
+        private void OnDownloadProgressChanged(int progress)
+        {
+            ShowProgress(progress);
         }
 
         private async void OnItemClick(object? sender, int position)
@@ -87,94 +107,16 @@ namespace AndroidYouTubeDownloader
                 if (result == null) return;
                 AppSettings.DownloadsFolderPath = result.Uri;
             }
-            Task.Run(() => DownloadAsync(stream));
+            ShowSnakcbar("Download started");
+            Task.Run(() => _downloadService.DownloadAsync(stream, VideoDataVM.VideoDetails));
         }
 
-        private async Task DownloadAsync(IStreamVM stream)
+        private void ShowProgress(int percentage)
         {
-            ShowSnakcbar("Download started");
-            try
-            {
-                if (stream is AudioStreamVM audio)
-                {
-                    var file = await DownloadToTemporaryFile(audio.AudioStream);
-                    await CopyToTargetFile(file, audio.AudioStream, VideoDataVM.VideoDetails);
-
-                    //var thumbnailFile = await downloadsFolder.CreateFileAsync(fileName, MimeTypes.MimeTypeMap.GetMimeType(".jpg"));
-                    //using (var fileStream = await thumbnailFile.OpenStreamAsync(FileAccess.ReadWrite))
-                    //{
-                    //    await downloadService.Download(VideoDataVM.VideoDetails.ThumbnailUrl, fileStream);
-                    //}
-
-                    ShowSnakcbar("Audio downloaded");
-                }
-                else if (stream is VideoStreamVM video)
-                {
-                    if (video.AudioStream == null)
-                    {
-                        var file = await DownloadToTemporaryFile(video.VideoStream);
-                        await CopyToTargetFile(file, video.VideoStream, VideoDataVM.VideoDetails);
-                    }
-                    else
-                    {
-                        var totalLength = video.AudioStream.ContentLength + video.VideoStream.ContentLength;
-
-                        var videoFile = await DownloadToTemporaryFile(video.VideoStream);
-                        var audioFile = await DownloadToTemporaryFile(video.AudioStream);
-
-                        var muxedPath = Java.IO.File.CreateTempFile("temp", null, ApplicationContext.CacheDir).AbsolutePath;
-                        var mediaMuxer = new MediaMuxerService(this);
-                        mediaMuxer.Mux(videoFile, audioFile, muxedPath, video.VideoStream.Container);
-
-                        await CopyToTargetFile(muxedPath, video.VideoStream, VideoDataVM.VideoDetails);
-
-                        ShowSnakcbar("Video downloaded");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowSnakcbar($"Download failed {ex.Message}");
-            }
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                _downloadProgressBar.Progress = 0;
+                _downloadProgressBar.Progress = percentage;
             });
-        }
-
-        private async Task<string> DownloadToTemporaryFile(IStreamInfo stream)
-        {
-            var tempFilePath = Java.IO.File.CreateTempFile("temp", null, ApplicationContext.CacheDir).AbsolutePath;
-
-            await _youtubeService.PrepareUrlAsync(stream);
-
-            var downloader = new FileDownloader(tempFilePath);
-            downloader.OnDownloadProgressChanged += (s, e) =>
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _downloadProgressBar.Progress = (int)e.ProgressPercentage;
-                });
-            };
-            await downloader.DownloadAsync(stream.PlayableUrl.Url);
-
-            return tempFilePath;
-        }
-
-        private async Task CopyToTargetFile(string tempFilePath, IStreamInfo stream, VideoDetailsVM video)
-        {
-            var fileName = FileService.RemoveForbiddenChars(video.Title);
-            var extension = stream.Container;
-            //if (stream is IAudioOnlyStreamInfo && stream.Container == "mp4")
-            //{
-            //    extension = "m4a";
-            //};
-            var downloadsFolder = new StorageItem(AppSettings.DownloadsFolderPath);
-            var audioFile = await downloadsFolder.CreateFileAsync($"{fileName}.{extension}", stream.MimeType);
-
-            using var inputFile = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read);
-            using var outputFile = await audioFile.OpenStreamAsync(FileAccess.Write);
-            inputFile.CopyTo(outputFile);
         }
 
         private void OnTabSelected(object? sender, TabLayout.TabSelectedEventArgs e)
@@ -201,7 +143,7 @@ namespace AndroidYouTubeDownloader
             {
                 if (Intent.Type.Contains("text/plain"))
                 {
-                    sharedUrl = Intent.GetStringExtra(Intent.ExtraText);
+                    var sharedUrl = Intent.GetStringExtra(Intent.ExtraText);
                     LogMessage($"HandleIntent {sharedUrl}");
                     Task.Run(() => GetVideoAsync(sharedUrl));
                 }
@@ -210,11 +152,9 @@ namespace AndroidYouTubeDownloader
 
         private async void HandleIntentTest()
         {
-            sharedUrl = "https://www.youtube.com/watch?v=piEyKyJ4pFg";// "https://www.youtube.com/watch?v=0nUeIjPrsCM";
-            Task.Run(() => GetVideoAsync(sharedUrl));
+            var url = "https://www.youtube.com/watch?v=piEyKyJ4pFg";// "https://www.youtube.com/watch?v=0nUeIjPrsCM";
+            Task.Run(() => GetVideoAsync(url));
         }
-
-        private VideoDataVM VideoDataVM;
 
         private async Task GetVideoAsync(string url)
         {
