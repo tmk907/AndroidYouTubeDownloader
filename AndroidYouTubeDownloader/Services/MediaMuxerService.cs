@@ -1,8 +1,6 @@
 ﻿using Android.Content;
 using Android.Media;
 using Java.Nio;
-using System.IO;
-using Xamarin.Essentials;
 
 namespace AndroidYouTubeDownloader.Services
 {
@@ -15,7 +13,7 @@ namespace AndroidYouTubeDownloader.Services
             _context = context;
         }
 
-        public string Mux(string videoUri, string audioUri, string container)
+        public void Mux(string videoPath, string audioPath, string muxedPath, string container)
         {
 
             MuxerOutputType format;
@@ -29,22 +27,19 @@ namespace AndroidYouTubeDownloader.Services
             }
             else
             {
-                return "";
+                return;
             }
 
-            var cacheDir = FileSystem.CacheDirectory;
-            var outputPath = Path.Combine(cacheDir, "output.video");
-
             // https://sisik.eu/blog/android/media/mix-audio-into-video
-            MediaMuxer muxer = new MediaMuxer(outputPath, format);
+            MediaMuxer muxer = new MediaMuxer(muxedPath, format);
 
             var videoExtractor = new MediaExtractor();
-            videoExtractor.SetDataSource(_context, Android.Net.Uri.Parse(videoUri), null);
+            videoExtractor.SetDataSource(videoPath);
             videoExtractor.SelectTrack(0); // Assuming only one track per file. Adjust code if this is not the case.
             var videoFormat = videoExtractor.GetTrackFormat(0);
 
             var audioExtractor = new MediaExtractor();
-            audioExtractor.SetDataSource(_context, Android.Net.Uri.Parse(audioUri), null);
+            audioExtractor.SetDataSource(audioPath);
             audioExtractor.SelectTrack(0); // Assuming only one track per file. Adjust code if this is not the case.
             var audioFormat = audioExtractor.GetTrackFormat(0);
 
@@ -104,8 +99,6 @@ namespace AndroidYouTubeDownloader.Services
 
             videoExtractor.Release();
             audioExtractor.Release();
-
-            return outputPath;
         }
     }
 }

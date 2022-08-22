@@ -4,6 +4,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Util;
 using Android.Widget;
+using AndroidX.Annotations;
 using AndroidX.ConstraintLayout.Widget;
 using AndroidX.RecyclerView.Widget;
 using AndroidYouTubeDownloader.Services;
@@ -11,13 +12,16 @@ using AndroidYouTubeDownloader.ViewModels;
 using Bumptech.Glide;
 using DryForest.Storage;
 using Google.Android.Material.ProgressIndicator;
+using Google.Android.Material.Snackbar;
 using Google.Android.Material.Tabs;
 using Plugin.CurrentActivity;
+using SimpleFileDownloader;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
+using YouTubeStreamsExtractor;
 
 namespace AndroidYouTubeDownloader
 {
@@ -64,7 +68,9 @@ namespace AndroidYouTubeDownloader
             _youtubeService = new YouTubeService();
 
             HandleIntent();
-            //HandleIntentTest();
+#if DEBUG
+            HandleIntentTest();
+#endif
         }
 
         private async void OnItemClick(object? sender, int position)
@@ -86,109 +92,89 @@ namespace AndroidYouTubeDownloader
 
         private async Task DownloadAsync(IStreamVM stream)
         {
+            ShowSnakcbar("Download started");
             try
             {
-                var downloadService = new DownloadService();
-                var downloadsFolder = new StorageItem(AppSettings.DownloadsFolderPath);
-
                 if (stream is AudioStreamVM audio)
                 {
-                    await _youtubeService.PrepareUrlAsync(audio.AudioStream);
+                    var file = await DownloadToTemporaryFile(audio.AudioStream);
+                    await CopyToTargetFile(file, audio.AudioStream, VideoDataVM.VideoDetails);
 
-                    var fileName = FileService.RemoveForbiddenChars(VideoDataVM.VideoDetails.Title);
-                    var extension = audio.AudioStream.Container == "mp4" ? "m4a" : audio.AudioStream.Codec;
+                    //var thumbnailFile = await downloadsFolder.CreateFileAsync(fileName, MimeTypes.MimeTypeMap.GetMimeType(".jpg"));
+                    //using (var fileStream = await thumbnailFile.OpenStreamAsync(FileAccess.ReadWrite))
+                    //{
+                    //    await downloadService.Download(VideoDataVM.VideoDetails.ThumbnailUrl, fileStream);
+                    //}
 
-                    var thumbnailFile = await downloadsFolder.CreateFileAsync(fileName, MimeTypes.MimeTypeMap.GetMimeType(".jpg"));
-                    using (var fileStream = await thumbnailFile.OpenStreamAsync(FileAccess.ReadWrite))
-                    {
-                        await downloadService.Download(VideoDataVM.VideoDetails.ThumbnailUrl, fileStream);
-                    }
-
-                    var progress = new Progress<double>((e) =>
-                    {
-                        var p = (int)(e / audio.AudioStream.ContentLength * 100);
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            _downloadProgressBar.Progress = p;
-                        });
-                        LogMessage($"progress {p} {e / audio.AudioStream.ContentLength} %");
-                    });
-                    var audioFile = await downloadsFolder.CreateFileAsync(fileName, MimeTypes.MimeTypeMap.GetMimeType($".{extension}"));
-                    using (var fileStream = await audioFile.OpenStreamAsync(FileAccess.ReadWrite))
-                    {
-                        await downloadService.Download(audio.AudioStream.PlayableUrl.Url, fileStream, progress);
-                    }
-
+                    ShowSnakcbar("Audio downloaded");
                 }
                 else if (stream is VideoStreamVM video)
                 {
-                    var fileName = FileService.RemoveForbiddenChars(VideoDataVM.VideoDetails.Title);
-
-                    await _youtubeService.PrepareUrlAsync(video.VideoStream);
                     if (video.AudioStream == null)
                     {
-                        var videoFile = await downloadsFolder.CreateFileAsync(fileName, video.VideoStream.MimeType);
-
-                        using (var fileStream = await videoFile.OpenStreamAsync(FileAccess.ReadWrite))
-                        {
-                            await downloadService.Download(video.VideoStream.PlayableUrl.Url, fileStream);
-                        }
+                        var file = await DownloadToTemporaryFile(video.VideoStream);
+                        await CopyToTargetFile(file, video.VideoStream, VideoDataVM.VideoDetails);
                     }
                     else
                     {
                         var totalLength = video.AudioStream.ContentLength + video.VideoStream.ContentLength;
-                        var progress = new Progress<double>((e) =>
-                        {
-                            var p = (int)(e / totalLength * 100);
-                            MainThread.BeginInvokeOnMainThread(() =>
-                            {
-                                _downloadProgressBar.Progress = p;
-                            });
-                            LogMessage($"progress {p} {e / totalLength} %");
-                        });
-                        var tempVideoFile = await downloadsFolder.CreateFileAsync($"{fileName}.vtemp", video.VideoStream.MimeType);
-                        using (var fileStream = await tempVideoFile.OpenStreamAsync(FileAccess.ReadWrite))
-                        {
-                            await downloadService.Download(video.VideoStream.PlayableUrl.Url, fileStream, progress);
-                        }
 
-                        progress = new Progress<double>((e) =>
-                        {
-                            var p = (int)((e + video.VideoStream.ContentLength) / totalLength * 100);
-                            MainThread.BeginInvokeOnMainThread(() =>
-                            {
-                                _downloadProgressBar.Progress = p;
-                            });
-                            LogMessage($"progress {p} {(e + video.VideoStream.ContentLength) / totalLength} %");
-                        });
-                        await _youtubeService.PrepareUrlAsync(video.AudioStream);
-                        var tempAudioFile = await downloadsFolder.CreateFileAsync($"{fileName}.atemp", video.AudioStream.MimeType);
-                        using (var fileStream = await tempAudioFile.OpenStreamAsync(FileAccess.ReadWrite))
-                        {
-                            await downloadService.Download(video.AudioStream.PlayableUrl.Url, fileStream, progress);
-                        }
+                        var videoFile = await DownloadToTemporaryFile(video.VideoStream);
+                        var audioFile = await DownloadToTemporaryFile(video.AudioStream);
 
-                        var videoFile = await downloadsFolder.CreateFileAsync($"{fileName}", video.VideoStream.MimeType);
+                        var muxedPath = Java.IO.File.CreateTempFile("temp", null, ApplicationContext.CacheDir).AbsolutePath;
                         var mediaMuxer = new MediaMuxerService(this);
-                        var outputPath = mediaMuxer.Mux(tempVideoFile.Uri, tempAudioFile.Uri, video.VideoStream.Container);
-                        using (var inputFileStream = new FileStream(outputPath, FileMode.Open))
-                        using (var outputFileStream = await videoFile.OpenStreamAsync(FileAccess.ReadWrite))
-                        {
-                            await inputFileStream.CopyToAsync(outputFileStream);
-                        }
-                        await tempAudioFile.Delete();
-                        await tempVideoFile.Delete();
+                        mediaMuxer.Mux(videoFile, audioFile, muxedPath, video.VideoStream.Container);
+
+                        await CopyToTargetFile(muxedPath, video.VideoStream, VideoDataVM.VideoDetails);
+
+                        ShowSnakcbar("Video downloaded");
                     }
                 }
             }
             catch (Exception ex)
             {
-
+                ShowSnakcbar($"Download failed {ex.Message}");
             }
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 _downloadProgressBar.Progress = 0;
             });
+        }
+
+        private async Task<string> DownloadToTemporaryFile(IStreamInfo stream)
+        {
+            var tempFilePath = Java.IO.File.CreateTempFile("temp", null, ApplicationContext.CacheDir).AbsolutePath;
+
+            await _youtubeService.PrepareUrlAsync(stream);
+
+            var downloader = new FileDownloader(tempFilePath);
+            downloader.OnDownloadProgressChanged += (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _downloadProgressBar.Progress = (int)e.ProgressPercentage;
+                });
+            };
+            await downloader.DownloadAsync(stream.PlayableUrl.Url);
+
+            return tempFilePath;
+        }
+
+        private async Task CopyToTargetFile(string tempFilePath, IStreamInfo stream, VideoDetailsVM video)
+        {
+            var fileName = FileService.RemoveForbiddenChars(video.Title);
+            var extension = stream.Container;
+            //if (stream is IAudioOnlyStreamInfo && stream.Container == "mp4")
+            //{
+            //    extension = "m4a";
+            //};
+            var downloadsFolder = new StorageItem(AppSettings.DownloadsFolderPath);
+            var audioFile = await downloadsFolder.CreateFileAsync($"{fileName}.{extension}", stream.MimeType);
+
+            using var inputFile = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read);
+            using var outputFile = await audioFile.OpenStreamAsync(FileAccess.Write);
+            inputFile.CopyTo(outputFile);
         }
 
         private void OnTabSelected(object? sender, TabLayout.TabSelectedEventArgs e)
@@ -269,6 +255,11 @@ namespace AndroidYouTubeDownloader
             streams.AddRange(VideoDataVM.Collections[index].VideoStreams);
 
             _downloadItemsAdapter.Replace(streams);
+        }
+
+        private void ShowSnakcbar(string message)
+        {
+            Snackbar.Make(_container, message, Snackbar.LengthShort).Show();
         }
 
         public static void LogMessage(string text)

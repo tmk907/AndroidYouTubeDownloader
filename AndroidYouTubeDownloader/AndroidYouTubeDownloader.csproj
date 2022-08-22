@@ -23,6 +23,6 @@
     <PackageReference Include="Xamarin.Android.Glide" Version="4.13.2.2" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.3" />
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.6.1.1" />
-    <PackageReference Include="YouTubeStreamsExtractor" Version="2.0.1" />
+    <PackageReference Include="YouTubeStreamsExtractor" Version="2.1.0" />
   </ItemGroup>
 </Project>
