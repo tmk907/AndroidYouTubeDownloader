@@ -12,7 +12,7 @@ namespace AndroidYouTubeDownloader.Services
     {
         private readonly YouTubeStreams _youTubeStreams;
 
-        public YouTubeService()
+        public YouTubeService(IJavaScriptEngine javaScriptEngine)
         {
             var msgHandler = new Xamarin.Android.Net.AndroidMessageHandler()
             {
@@ -23,6 +23,7 @@ namespace AndroidYouTubeDownloader.Services
             YouTubeStreams.ReplaceReqiredHeaders(httpClient);
 
             _youTubeStreams = new YouTubeStreams(httpClient);
+            _youTubeStreams.Decryptor.ChangeJsEngine(javaScriptEngine);
         }
 
         public async Task<VideoDataVM> GetVideoData(string url)

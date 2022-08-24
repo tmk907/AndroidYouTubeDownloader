@@ -6,13 +6,6 @@ namespace AndroidYouTubeDownloader.Services
 {
     public class MediaMuxerService
     {
-        private readonly Context _context;
-
-        public MediaMuxerService(Context context)
-        {
-            _context = context;
-        }
-
         public void Mux(string videoPath, string audioPath, string muxedPath, string container)
         {
 

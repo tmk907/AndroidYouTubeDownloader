@@ -3,8 +3,8 @@ using Android.Content;
 using Android.OS;
 using Android.Runtime;
 using Android.Util;
+using Android.Webkit;
 using Android.Widget;
-using AndroidX.Annotations;
 using AndroidX.ConstraintLayout.Widget;
 using AndroidX.RecyclerView.Widget;
 using AndroidYouTubeDownloader.Services;
@@ -15,30 +15,30 @@ using Google.Android.Material.ProgressIndicator;
 using Google.Android.Material.Snackbar;
 using Google.Android.Material.Tabs;
 using Plugin.CurrentActivity;
-using SimpleFileDownloader;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
-using YouTubeStreamsExtractor;
 
 namespace AndroidYouTubeDownloader
 {
     [Activity(Label = "@string/app_name", MainLauncher = true)]
     [IntentFilter(new[] { Intent.ActionSend }, Categories = new[] { Intent.CategoryDefault }, DataMimeTypes = new[] { "text/plain", })]
-    public class MainActivity : Activity
+    public partial class MainActivity : Activity
     {
         private DownloadItemsAdapter _downloadItemsAdapter;
         private CircularProgressIndicator _progressBar;
         private ConstraintLayout _container;
         private TabLayout _tabLayout;
         private LinearProgressIndicator _downloadProgressBar;
+        private WebView _webView;
 
         private VideoDataVM VideoDataVM;
         
         private YouTubeService _youtubeService;
         private DownloadService _downloadService;
+        private WebViewJsEngine _jsEngine;
+        private bool _isDownloading;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -66,12 +66,16 @@ namespace AndroidYouTubeDownloader
 
             _downloadItemsAdapter.ItemClick += OnItemClick;
 
-            _youtubeService = new YouTubeService();
+            _webView = FindViewById<WebView>(Resource.Id.webview);
+            _webView.Settings.JavaScriptEnabled = true;
+            _jsEngine = new WebViewJsEngine(_webView);
+
+            _youtubeService = new YouTubeService(_jsEngine);
             _downloadService = new DownloadService(ApplicationContext,_youtubeService);
             _downloadService.OnDownloadProgressChanged += OnDownloadProgressChanged;
             _downloadService.OnDownloadError += OnDownloadError;
             _downloadService.OnDownloadFinished += OnDownloadFinished;
-
+            
             HandleIntent();
 #if DEBUG
             HandleIntentTest();
@@ -81,11 +85,14 @@ namespace AndroidYouTubeDownloader
         private void OnDownloadFinished()
         {
             ShowSnakcbar("Download finished");
+            ShowProgress(0);
+            _isDownloading = false;
         }
 
         private void OnDownloadError(Exception ex)
         {
             ShowSnakcbar($"Download error {ex.Message}");
+            _isDownloading = false;
         }
 
         private void OnDownloadProgressChanged(int progress)
@@ -95,19 +102,29 @@ namespace AndroidYouTubeDownloader
 
         private async void OnItemClick(object? sender, int position)
         {
-            var stream = _downloadItemsAdapter.Get(position);
+            if (_isDownloading) return;
+            _isDownloading = true;
 
             var granted = await FileService.RequestPermissions();
-            if (!granted) return;
+            if (!granted)
+            {
+                _isDownloading = false;
+                return;
+            }
 
             if (string.IsNullOrEmpty(AppSettings.DownloadsFolderPath))
             {
                 var folderPicker = new FolderPicker();
                 var result = await folderPicker.PickFolderAsync();
-                if (result == null) return;
+                if (result == null)
+                {
+                    _isDownloading = false;
+                    return;
+                }
                 AppSettings.DownloadsFolderPath = result.Uri;
             }
             ShowSnakcbar("Download started");
+            var stream = _downloadItemsAdapter.Get(position);
             Task.Run(() => _downloadService.DownloadAsync(stream, VideoDataVM.VideoDetails));
         }
 
@@ -199,7 +216,7 @@ namespace AndroidYouTubeDownloader
 
         private void ShowSnakcbar(string message)
         {
-            Snackbar.Make(_container, message, Snackbar.LengthShort).Show();
+            Snackbar.Make(_container, message, Snackbar.LengthLong).Show();
         }
 
         public static void LogMessage(string text)
