@@ -112,7 +112,21 @@ namespace AndroidYouTubeDownloader
                 return;
             }
 
-            if (string.IsNullOrEmpty(AppSettings.DownloadsFolderPath))
+
+            var isPermissionRevoked = ContentResolver.PersistedUriPermissions.Count == 0;
+            //foreach(var p in ContentResolver.PersistedUriPermissions.ToList())
+            //{
+            //    var p1 = p.Uri.EncodedPath;
+            //    var p2 = Android.Net.Uri.Parse(AppSettings.DownloadsFolderPath);
+            //    var s1 = p.Uri.ToString();
+            //    var s2 = p2.ToString();
+            //    if (s2.StartsWith(s1))
+            //    {
+            //        isPermissionRevoked = false;
+            //    }
+            //}
+
+            if (string.IsNullOrEmpty(AppSettings.DownloadsFolderPath) || isPermissionRevoked)
             {
                 var folderPicker = new FolderPicker();
                 var result = await folderPicker.PickFolderAsync();
