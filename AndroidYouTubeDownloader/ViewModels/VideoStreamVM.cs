@@ -13,7 +13,21 @@ namespace AndroidYouTubeDownloader.ViewModels
                 AudioStream = null;
             }
 
-            TotalSize = Helpers.ToMBLabel(videoStream.ContentLength + audioStream?.ContentLength ?? 0);
+            if (videoStream.ContentLength == 0)
+            {
+                TotalSize = "? MB";
+            }
+            else
+            {
+                if (audioStream == null || audioStream.ContentLength != 0)
+                {
+                    TotalSize = Helpers.ToMBLabel(videoStream.ContentLength + audioStream?.ContentLength ?? 0);
+                }
+                else
+                {
+                    TotalSize = $"> {Helpers.ToMBLabel(videoStream.ContentLength)}";
+                }
+            }
         }
 
         public string TotalSize { get; }
