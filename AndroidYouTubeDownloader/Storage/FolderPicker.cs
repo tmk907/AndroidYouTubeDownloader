@@ -77,10 +77,6 @@ namespace DryForest.Storage
         {
             using (var intent = new Intent(Intent.ActionOpenDocumentTree))
             {
-                //intent.AddFlags(ActivityFlags.GrantReadUriPermission);
-                //intent.AddFlags(ActivityFlags.GrantWriteUriPermission);
-                //intent.AddFlags(ActivityFlags.GrantPersistableUriPermission);
-                //intent.AddFlags(ActivityFlags.GrantPrefixUriPermission);
                 intent.PutExtra("android.content.extra.SHOW_ADVANCED", true);
                 intent.PutExtra("android.content.extra.FANCY", true);
                 activity.StartActivityForResult(intent, requestCode);

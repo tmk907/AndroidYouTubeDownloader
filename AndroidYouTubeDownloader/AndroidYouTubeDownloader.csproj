@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <None Remove="Resources\font\roboto.xml" />
+    <None Remove="Resources\layout\activity_share_target.xml" />
     <None Remove="Resources\layout\download_item.xml" />
     <None Remove="Resources\layout\header_layout.xml" />
     <None Remove="Resources\values\font_certs.xml" />

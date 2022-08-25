@@ -6,57 +6,54 @@ using YouTubeStreamsExtractor;
 
 namespace AndroidYouTubeDownloader
 {
-    public partial class MainActivity
+    public class WebViewJsEngine : IJavaScriptEngine
     {
-        public class WebViewJsEngine : IJavaScriptEngine
+        private readonly WebView _webView;
+        private ValueCallback _webviewCallback;
+
+        public WebViewJsEngine(WebView webView)
         {
-            private readonly WebView _webView;
-            private ValueCallback _webviewCallback;
+            _webView = webView;
+            _webviewCallback = new ValueCallback();
+            _webviewCallback.OnResultReceived += OnResultReceived;
+        }
 
-            public WebViewJsEngine(WebView webView)
+        public async Task<string> ExecuteJSCodeAsync(string code, string functionName, string argument)
+        {
+            var script = $"{code}; {functionName}('{argument}')";
+
+            var tcs = new TaskCompletionSource<string>();
+            Action<string> callback = null;
+            callback = (result) =>
             {
-                _webView = webView;
-                _webviewCallback = new ValueCallback();
-                _webviewCallback.OnResultReceived += OnResultReceived;
-            }
+                _webviewCallback.OnResultReceived -= callback;
+                tcs.SetResult(result);
+            };
+            _webviewCallback.OnResultReceived += callback;
 
-            public async Task<string> ExecuteJSCodeAsync(string code, string functionName, string argument)
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                var script = $"{code}; {functionName}('{argument}')";
+                _webView.EvaluateJavascript(script, _webviewCallback);
+            });
 
-                var tcs = new TaskCompletionSource<string>();
-                Action<string> callback = null;
-                callback = (result) =>
-                {
-                    _webviewCallback.OnResultReceived -= callback;
-                    tcs.SetResult(result);
-                };
-                _webviewCallback.OnResultReceived += callback;
+            var result = await tcs.Task;
 
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _webView.EvaluateJavascript(script, _webviewCallback);
-                });
+            return result;
+        }
 
-                var result = await tcs.Task;
+        private void OnResultReceived(string obj)
+        {
 
-                return result;
-            }
+        }
 
-            private void OnResultReceived(string obj)
+        class ValueCallback : Java.Lang.Object, IValueCallback
+        {
+            public event Action<string> OnResultReceived;
+
+            public void OnReceiveValue(Java.Lang.Object? value)
             {
-
-            }
-
-            class ValueCallback : Java.Lang.Object, IValueCallback
-            {
-                public event Action<string> OnResultReceived;
-
-                public void OnReceiveValue(Java.Lang.Object? value)
-                {
-                    var res = value.ToString().Trim('"');
-                    OnResultReceived?.Invoke(res);
-                }
+                var res = value.ToString().Trim('"');
+                OnResultReceived?.Invoke(res);
             }
         }
     }

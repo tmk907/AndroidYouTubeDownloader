@@ -32,17 +32,37 @@ namespace AndroidYouTubeDownloader.Services
             _okHttpClient = new OkHttpClient();
         }
 
-        public event Action OnDownloadFinished;
-
-        public event Action<int> OnDownloadProgressChanged;
+        public event Action<DownloadState> OnDownloadStateChanged;
 
         public event Action<Exception> OnDownloadError;
 
+        public class DownloadState
+        {
+            public DownloadState(DownloadStage state, int progressPercentage)
+            {
+                State = state;
+                ProgressPercentage = progressPercentage;
+            }
+
+            public DownloadStage State { get; }
+
+            public int ProgressPercentage { get; }
+
+            public enum DownloadStage
+            {
+                FetchingData,
+                Downloading,
+                Muxing,
+                Completed
+            }
+        }
 
         public async Task DownloadAsync(IStreamVM stream, VideoDetailsVM videoDetails)
         {
             try
             {
+                OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.FetchingData, 0));
+
                 if (stream is AudioStreamVM audio)
                 {
                     var file = await DownloadToTemporaryFile(audio.AudioStream).ConfigureAwait(false);
@@ -54,7 +74,7 @@ namespace AndroidYouTubeDownloader.Services
                     //    await downloadService.Download(VideoDataVM.VideoDetails.ThumbnailUrl, fileStream);
                     //}
 
-                    OnDownloadFinished?.Invoke();
+                    OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.Completed, 0));
                 }
                 else if (stream is VideoStreamVM video)
                 {
@@ -70,13 +90,15 @@ namespace AndroidYouTubeDownloader.Services
                         var videoFile = await DownloadToTemporaryFile(video.VideoStream).ConfigureAwait(false);
                         var audioFile = await DownloadToTemporaryFile(video.AudioStream).ConfigureAwait(false);
 
+                        OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.Muxing, 0));
+
                         var muxedPath = Java.IO.File.CreateTempFile("temp", null, _context.CacheDir).AbsolutePath;
                         var mediaMuxer = new MediaMuxerService();
                         mediaMuxer.Mux(videoFile, audioFile, muxedPath, video.VideoStream.Container);
 
                         await CopyToTargetFile(muxedPath, video.VideoStream, videoDetails).ConfigureAwait(false);
 
-                        OnDownloadFinished?.Invoke();
+                        OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.Completed, 0));
                     }
                 }
             }
@@ -99,7 +121,7 @@ namespace AndroidYouTubeDownloader.Services
             var progress = new Progress<double>((e) =>
             {
                 var p = (int)(e / contentLength * 100);
-                OnDownloadProgressChanged?.Invoke(p);
+                OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.Downloading, p));
             });
             using var fileStream = new FileStream(tempFilePath, FileMode.Open, FileAccess.Write);
             await DownloadRanges(stream.PlayableUrl.Url, contentLength, fileStream, progress).ConfigureAwait(false);
