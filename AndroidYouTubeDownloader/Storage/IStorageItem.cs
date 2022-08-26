@@ -9,6 +9,7 @@ namespace DryForest.Storage
         bool IsFile { get; }
         bool IsFolder { get; }
         string Uri { get; }
+        string Name { get; }
 
         Task<IStorageItem> CreateFileAsync(string name, string mimeType);
         Task<IStorageItem> CreateFolderAsync(string name);

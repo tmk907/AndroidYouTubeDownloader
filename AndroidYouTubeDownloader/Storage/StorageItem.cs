@@ -30,6 +30,8 @@ namespace DryForest.Storage
         public bool IsFolder => thisDocumentFile.IsDirectory;
         public string Uri => thisDocumentFile.Uri.ToString();
 
+        public string Name => thisDocumentFile.Name;
+
         public Task<IEnumerable<IStorageItem>> GetFilesAsync()
         {
             IEnumerable<IStorageItem> items = thisDocumentFile.ListFiles()

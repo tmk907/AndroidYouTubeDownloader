@@ -138,8 +138,25 @@ namespace AndroidYouTubeDownloader.Services
             //    extension = "m4a";
             //};
             var downloadsFolder = new StorageItem(AppSettings.DownloadsFolderPath);
-            var audioFile = await downloadsFolder.CreateFileAsync($"{fileName}.{extension}", stream.MimeType).ConfigureAwait(false);
+            var files = await downloadsFolder.GetFilesAsync();
+            var fileNameSuffix = "";
+            var max = 22;
+            for(int i = 2; i <= max; i++)
+            {
+                if (files.Any(x=>x.Name == $"{fileName} {fileNameSuffix}.{extension}"))
+                {
+                    fileNameSuffix = $"({i})";
+                }
+                else
+                {
+                    break;
+                }
+            }
 
+            if (fileNameSuffix == $"({max})") throw new Exception("File with same name exists");
+            
+            var audioFile = await downloadsFolder
+                .CreateFileAsync($"{fileName} {fileNameSuffix}.{extension}", stream.MimeType).ConfigureAwait(false);
             using var inputFile = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read);
             using var outputFile = await audioFile.OpenStreamAsync(FileAccess.Write);
             await inputFile.CopyToAsync(outputFile).ConfigureAwait(false);
