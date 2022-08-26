@@ -29,4 +29,12 @@
     <PackageReference Include="YouTubeStreamsExtractor" Version="2.4.0" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <AndroidKeyStore>True</AndroidKeyStore>
+    <AndroidSigningKeyStore>androidyoutubedownloader.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>key</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass></AndroidSigningKeyPass>
+    <AndroidSigningStorePass></AndroidSigningStorePass>
+  </PropertyGroup>
+	
 </Project>
