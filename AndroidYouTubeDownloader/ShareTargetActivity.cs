@@ -127,6 +127,7 @@ namespace AndroidYouTubeDownloader
         private void OnDownloadError(Exception ex)
         {
             ShowSnakcbar($"Download error {ex.Message}");
+            _downloadProgressBar.Visibility = Android.Views.ViewStates.Invisible;
             _isDownloading = false;
         }
 
