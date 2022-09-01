@@ -1,10 +1,9 @@
-﻿using Android.Content;
-using Android.Media;
+﻿using Android.Media;
 using Java.Nio;
 
 namespace AndroidYouTubeDownloader.Services
 {
-    public class MediaMuxerService
+    public class MediaMuxerService : IMediaMuxer
     {
         public void Mux(string videoPath, string audioPath, string muxedPath, string container)
         {

@@ -93,7 +93,8 @@ namespace AndroidYouTubeDownloader.Services
                         OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.Muxing, 0));
 
                         var muxedPath = Java.IO.File.CreateTempFile("temp", null, _context.CacheDir).AbsolutePath;
-                        var mediaMuxer = new MediaMuxerService();
+                        //var mediaMuxer = new MediaMuxerService();
+                        var mediaMuxer = new FFmpegMediaMuxerService();
                         mediaMuxer.Mux(videoFile, audioFile, muxedPath, video.VideoStream.Container);
 
                         await CopyToTargetFile(muxedPath, video.VideoStream, videoDetails).ConfigureAwait(false);
