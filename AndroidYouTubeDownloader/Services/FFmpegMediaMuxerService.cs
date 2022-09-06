@@ -1,5 +1,4 @@
-﻿using Laerdal.FFmpeg.Android;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace AndroidYouTubeDownloader.Services
 {
@@ -19,8 +18,8 @@ namespace AndroidYouTubeDownloader.Services
             arguments.Add("-y");
             arguments.Add(muxedPath);
 
-            Config.IgnoreSignal(Signal.Sigxcpu);
-            var result = FFmpeg.Execute(arguments.ToArray());
+
+            FFmpegKitSlim.FFmpegKitHelper.Execute(arguments.ToArray());
         }
     }
 }
