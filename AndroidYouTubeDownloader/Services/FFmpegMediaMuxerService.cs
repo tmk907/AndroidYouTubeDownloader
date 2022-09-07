@@ -18,7 +18,6 @@ namespace AndroidYouTubeDownloader.Services
             arguments.Add("-y");
             arguments.Add(muxedPath);
 
-
             FFmpegKitSlim.FFmpegKitHelper.Execute(arguments.ToArray());
         }
     }
