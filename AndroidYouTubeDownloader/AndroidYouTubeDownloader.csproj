@@ -3,7 +3,7 @@
     <TargetFramework>net6.0-android</TargetFramework>
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <ApplicationId>com.tmk907.AndroidYouTubeDownloader</ApplicationId>
     <ApplicationVersion>4</ApplicationVersion>
@@ -14,11 +14,13 @@
     <None Remove="Resources\drawable\ic_settings.xml" />
     <None Remove="Resources\font\roboto.xml" />
     <None Remove="Resources\layout\activity_share_target.xml" />
+    <None Remove="Resources\layout\download_fragment.xml" />
     <None Remove="Resources\layout\download_item.xml" />
     <None Remove="Resources\layout\header_layout.xml" />
     <None Remove="Resources\layout\home_fragment.xml" />
     <None Remove="Resources\menu\settings_menu.xml" />
     <None Remove="Resources\navigation\navigation.xml" />
+    <None Remove="Resources\navigation\navigation_share.xml" />
     <None Remove="Resources\values\font_certs.xml" />
     <None Remove="Resources\values\preloaded_fonts.xml" />
   </ItemGroup>

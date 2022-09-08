@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation_share"
+    app:startDestination="@id/downloadFragment">
+
+	<fragment
+        android:id="@+id/downloadFragment"
+        android:name="AndroidYouTubeDownloader.DownloadFragment"
+        android:label="Download" >
+		<argument
+            android:name="video_url"
+            app:argType="string" />
+	</fragment>
+
+	<fragment
+        android:id="@+id/settingsFragment"
+        android:name="AndroidYouTubeDownloader.SettingsFragment"
+        android:label="Settings" />
+
+	<action android:id="@+id/action_global_downloadFragment" app:destination="@id/downloadFragment"/>
+	<action android:id="@+id/action_global_settingsFragment" app:destination="@id/settingsFragment"/>
+</navigation>
