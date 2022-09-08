@@ -78,6 +78,7 @@ namespace AndroidYouTubeDownloader
         public override void OnViewCreated(View view, Bundle savedInstanceState)
         {
             _videoUrl = Arguments.GetString("video_url");
+            _isDownloading = false;
             if (!string.IsNullOrEmpty(_videoUrl))
             {
                 _loadingVideoProgressRing.Visibility = Android.Views.ViewStates.Visible;
@@ -139,8 +140,11 @@ namespace AndroidYouTubeDownloader
 
         private void OnDownloadError(Exception ex)
         {
-            ShowSnakcbar($"Download error {ex.Message}");
-            _downloadProgressBar.Visibility = Android.Views.ViewStates.Invisible;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                ShowSnakcbar($"Download error {ex.Message}");
+                _downloadProgressBar.Visibility = Android.Views.ViewStates.Invisible;
+            });
             _isDownloading = false;
         }
 

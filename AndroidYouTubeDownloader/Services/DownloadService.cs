@@ -13,6 +13,8 @@ using System.Linq;
 using System.Net;
 using Xamarin.Android.Net;
 using Square.OkHttp;
+using ATL;
+using Java.Nio.FileNio.Attributes;
 
 namespace AndroidYouTubeDownloader.Services
 {
@@ -65,15 +67,28 @@ namespace AndroidYouTubeDownloader.Services
 
                 if (stream is AudioStreamVM audio)
                 {
-                    var file = await DownloadToTemporaryFile(audio.AudioStream).ConfigureAwait(false);
-                    await CopyToTargetFile(file, audio.AudioStream, videoDetails).ConfigureAwait(false);
+                    var tempFile = await DownloadToTemporaryFile(audio.AudioStream).ConfigureAwait(false);
+                    var audioFile = Path.ChangeExtension(tempFile, audio.AudioStream.Container);
+                    File.Move(tempFile, audioFile);
 
-                    //var thumbnailFile = await downloadsFolder.CreateFileAsync(fileName, MimeTypes.MimeTypeMap.GetMimeType(".jpg"));
-                    //using (var fileStream = await thumbnailFile.OpenStreamAsync(FileAccess.ReadWrite))
-                    //{
-                    //    await downloadService.Download(VideoDataVM.VideoDetails.ThumbnailUrl, fileStream);
-                    //}
+                    try
+                    {
+                        var thumbnailData = await _httpClient.GetByteArrayAsync(videoDetails.ThumbnailUrl).ConfigureAwait(false);
+                        
+                        var track = new Track(audioFile);
+                        PictureInfo newPicture = PictureInfo.fromBinaryData(thumbnailData);
+                        track.EmbeddedPictures.Add(newPicture);
+                        track.Title = videoDetails.Title;
+                        track.Artist = videoDetails.Channel;
+                        track.Comment = videoDetails.Url;
+                        track.Save();
+                    }
+                    catch (Exception ex)
+                    {
 
+                    }
+
+                    await CopyToTargetFile(audioFile, audio.AudioStream, videoDetails).ConfigureAwait(false);
                     OnDownloadStateChanged?.Invoke(new DownloadState(DownloadState.DownloadStage.Completed, 0));
                 }
                 else if (stream is VideoStreamVM video)
@@ -95,7 +110,7 @@ namespace AndroidYouTubeDownloader.Services
                         var muxedPath = Java.IO.File.CreateTempFile("temp", null, _context.CacheDir).AbsolutePath;
                         //var mediaMuxer = new MediaMuxerService();
                         var mediaMuxer = new FFmpegMediaMuxerService();
-                        mediaMuxer.Mux(videoFile, audioFile, muxedPath, video.VideoStream.Container);
+                        mediaMuxer.Mux(videoFile, audioFile, muxedPath, video.VideoStream.Container, videoDetails);
 
                         await CopyToTargetFile(muxedPath, video.VideoStream, videoDetails).ConfigureAwait(false);
 
@@ -134,10 +149,16 @@ namespace AndroidYouTubeDownloader.Services
         {
             var fileName = FileService.RemoveForbiddenChars(video.Title);
             var extension = stream.Container;
-            //if (stream is IAudioOnlyStreamInfo && stream.Container == "mp4")
-            //{
-            //    extension = "m4a";
-            //};
+            var mimeType = stream.MimeType;
+            if (stream.Codec.Contains("opus"))
+            {
+                mimeType = "audio/ogg";
+                extension = "oga";
+            }
+            if (mimeType == "audio/mp4")
+            {
+                extension = "m4a";
+            }
             var downloadsFolder = new StorageItem(AppSettings.DownloadsFolderPath);
             var files = await downloadsFolder.GetFilesAsync();
             var fileNameSuffix = "";
@@ -157,7 +178,7 @@ namespace AndroidYouTubeDownloader.Services
             if (fileNameSuffix == $"({max})") throw new Exception("File with same name exists");
             
             var audioFile = await downloadsFolder
-                .CreateFileAsync($"{fileName} {fileNameSuffix}.{extension}", stream.MimeType).ConfigureAwait(false);
+                .CreateFileAsync($"{fileName}{fileNameSuffix}", mimeType).ConfigureAwait(false);
             using var inputFile = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read);
             using var outputFile = await audioFile.OpenStreamAsync(FileAccess.Write);
             await inputFile.CopyToAsync(outputFile).ConfigureAwait(false);

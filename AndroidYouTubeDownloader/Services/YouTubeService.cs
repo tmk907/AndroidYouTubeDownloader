@@ -42,7 +42,8 @@ namespace AndroidYouTubeDownloader.Services
             {
                 Channel = videoDetails.Author ?? "",
                 ThumbnailUrl = videoDetails.Thumbnail.Thumbnails.OrderByDescending(x => x.Width).FirstOrDefault()?.Url ?? "",
-                Title = videoDetails.Title ?? ""
+                Title = videoDetails.Title ?? "",
+                Url = url
             };
             
             var streams = await _youTubeStreams.GetAllStreamsAsync(data);
