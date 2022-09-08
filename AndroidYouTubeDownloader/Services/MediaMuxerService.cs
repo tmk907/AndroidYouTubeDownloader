@@ -1,11 +1,12 @@
 ﻿using Android.Media;
+using AndroidYouTubeDownloader.ViewModels;
 using Java.Nio;
 
 namespace AndroidYouTubeDownloader.Services
 {
     public class MediaMuxerService : IMediaMuxer
     {
-        public void Mux(string videoPath, string audioPath, string muxedPath, string container)
+        public void Mux(string videoPath, string audioPath, string muxedPath, string container, VideoDetailsVM videoDetails)
         {
 
             MuxerOutputType format;
