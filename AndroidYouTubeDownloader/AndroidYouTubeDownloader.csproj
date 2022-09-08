@@ -11,10 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\drawable\ic_settings.xml" />
     <None Remove="Resources\font\roboto.xml" />
     <None Remove="Resources\layout\activity_share_target.xml" />
     <None Remove="Resources\layout\download_item.xml" />
     <None Remove="Resources\layout\header_layout.xml" />
+    <None Remove="Resources\layout\home_fragment.xml" />
+    <None Remove="Resources\menu\settings_menu.xml" />
+    <None Remove="Resources\navigation\navigation.xml" />
     <None Remove="Resources\values\font_certs.xml" />
     <None Remove="Resources\values\preloaded_fonts.xml" />
   </ItemGroup>
@@ -25,6 +29,9 @@
     <PackageReference Include="Square.OkHttp" Version="2.7.5.6" />
     <PackageReference Include="Square.OkIO" Version="2.10.0.5" />
     <PackageReference Include="Xamarin.Android.Glide" Version="4.13.2.2" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.Fragment" Version="2.5.1" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.UI" Version="2.5.1" />
+    <PackageReference Include="Xamarin.AndroidX.Preference" Version="1.2.0.2" />
     <PackageReference Include="Xamarin.Essentials" Version="1.7.3" />
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.6.1.1" />
     <PackageReference Include="YouTubeStreamsExtractor" Version="2.4.0" />

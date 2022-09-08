@@ -153,16 +153,11 @@ namespace AndroidYouTubeDownloader
                     _isDownloading = false;
                     return;
                 }
-                AppSettings.DownloadsFolderPath = result.Uri;
+                AppSettings.ChangeDownloadsFolder(result.Uri, result.Name);
             }
             ShowSnakcbar("Download started");
             var stream = _downloadItemsAdapter.Get(position);
             Task.Run(() => _downloadService.DownloadAsync(stream, VideoDataVM.VideoDetails));
-        }
-
-        private void ShowProgress(int percentage)
-        {
-            _downloadProgressBar.Progress = percentage;
         }
 
         private void OnTabSelected(object? sender, TabLayout.TabSelectedEventArgs e)
