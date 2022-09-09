@@ -1,45 +1,11 @@
-﻿using Android.Content;
-using Android.Media;
-using Android.OS;
-using System.IO;
+﻿using Android.Media;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
-using YouTubeStreamsExtractor;
-using Environment = Android.OS.Environment;
 
 namespace AndroidYouTubeDownloader.Services
 {
-    public interface IFileService
+    public class FileService
     {
-
-        string GetVideosFolderPath();
-        void AddMediaFile(string path);
-
-        string GetFolderPath();
-    }
-
-    public class FileService : IFileService
-    {
-        public string GetVideosFolderPath()
-        {
-            return Environment.GetExternalStoragePublicDirectory(Environment.DirectoryMovies).AbsolutePath;
-        }
-
-        public static string GetDownloadsFolderPath()
-        {
-            return Environment.GetExternalStoragePublicDirectory(Environment.DirectoryDownloads).AbsolutePath;
-        }
-
-        public string GetFolderPath()
-        {
-            var dir = Path.Combine(FileService.GetDownloadsFolderPath(), "YoutubeDownloads");
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            return dir;
-        }
-
         public void AddMediaFile(string path)
         {
             MediaScannerConnection.ScanFile(Platform.CurrentActivity.ApplicationContext, new string[] { path }, null, null);
@@ -47,19 +13,6 @@ namespace AndroidYouTubeDownloader.Services
             //Intent intent = new Intent(Intent.ActionMediaScannerScanFile);
             //intent.SetData(Android.Net.Uri.FromFile(new Java.IO.File(path)));
             //CrossCurrentActivity.Current.AppContext.SendBroadcast(intent);
-        }
-
-        public static string GetExtensionFromStream(IStreamInfo stream)
-        {
-            if (stream is IAudioStreamInfo)
-            {
-                if (stream.Container == "mp4")
-                {
-                    return "m4a";
-                }
-                return stream.Container;
-            }
-            return stream.Container;
         }
 
         public static string RemoveForbiddenChars(string text)

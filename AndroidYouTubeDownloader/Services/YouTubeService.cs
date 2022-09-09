@@ -22,8 +22,7 @@ namespace AndroidYouTubeDownloader.Services
             httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
             YouTubeStreams.ReplaceReqiredHeaders(httpClient);
 
-            _youTubeStreams = new YouTubeStreams(httpClient);
-            _youTubeStreams.Decryptor.ChangeJsEngine(javaScriptEngine);
+            _youTubeStreams = new YouTubeStreams(javaScriptEngine, httpClient);
         }
 
         public async Task<VideoDataVM> GetVideoData(string url)

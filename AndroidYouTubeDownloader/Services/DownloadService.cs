@@ -11,10 +11,8 @@ using System.Net.Http;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using Xamarin.Android.Net;
 using Square.OkHttp;
 using ATL;
-using Java.Nio.FileNio.Attributes;
 
 namespace AndroidYouTubeDownloader.Services
 {
@@ -29,8 +27,7 @@ namespace AndroidYouTubeDownloader.Services
         {
             _context = context;
             _youtubeService = youTubeService;
-            var handler = new AndroidClientHandler();
-            _httpClient = new HttpClient(handler);
+            _httpClient = new HttpClient();
             _okHttpClient = new OkHttpClient();
         }
 
