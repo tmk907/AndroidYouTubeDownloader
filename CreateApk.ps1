@@ -61,7 +61,7 @@ Function CopyToLocalAppStore {
         $publishedApkName = "$appName-v$versionName-$arch.apk"
 
         Copy-Item -Path "$publishDirectory\$apkName" -Destination "$appStoreDirectory\$publishedApkName"
-        Write-Host "$publishedApkName copied to  $publishDirectory"
+        Write-Host "$publishedApkName copied to  $appStoreDirectory"
     }
 }
 
