@@ -175,7 +175,7 @@ namespace AndroidYouTubeDownloader.Services
             if (fileNameSuffix == $"({max})") throw new Exception("File with same name exists");
             
             var audioFile = await downloadsFolder
-                .CreateFileAsync($"{fileName}{fileNameSuffix}", mimeType).ConfigureAwait(false);
+                .CreateFileAsync($"{fileName}{fileNameSuffix}.{extension}", mimeType).ConfigureAwait(false);
             using var inputFile = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read);
             using var outputFile = await audioFile.OpenStreamAsync(FileAccess.Write);
             await inputFile.CopyToAsync(outputFile).ConfigureAwait(false);
