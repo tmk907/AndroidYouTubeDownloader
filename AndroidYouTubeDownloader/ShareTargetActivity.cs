@@ -17,6 +17,7 @@ namespace AndroidYouTubeDownloader
     internal class ShareTargetActivity : AppCompatActivity
     {
         private NavController _navController;
+        private string _sharedUrl = "";
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -59,8 +60,17 @@ namespace AndroidYouTubeDownloader
 
         protected override void OnNewIntent(Intent? intent)
         {
-            var url = GetSharedUrl(intent);
-            _navController.Navigate(DownloadFragment.NavigateTo(url));
+            _sharedUrl = GetSharedUrl(intent);
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            if (!string.IsNullOrEmpty(_sharedUrl))
+            {
+                _navController.Navigate(DownloadFragment.NavigateTo(_sharedUrl));
+                _sharedUrl = "";
+            }
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Android.Content.PM.Permission[] grantResults)
