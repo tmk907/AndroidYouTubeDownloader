@@ -4,9 +4,9 @@ Android app for downloading audio and videos from Youtube.
 
 ## Screenshots
 
-![screenshot 1](https://github.com/tmk907/AndroidYouTubeDownloader/blob/master/images/download1.png "Download")
-![screenshot 1](https://github.com/tmk907/AndroidYouTubeDownloader/blob/master/images/download2.png "Download")
-![screenshot 1](https://github.com/tmk907/AndroidYouTubeDownloader/blob/master/images/settings.png "Settings")
+![screenshot 1](https://github.com/tmk907/AndroidYouTubeDownloader/blob/master/images/download1.jpg "Download")
+![screenshot 1](https://github.com/tmk907/AndroidYouTubeDownloader/blob/master/images/download2.jpg "Download")
+![screenshot 1](https://github.com/tmk907/AndroidYouTubeDownloader/blob/master/images/settings.jpg "Settings")
 
 
 ## Libraries used
