@@ -16,10 +16,7 @@ public sealed class CopyArtifactsTask : FrostingTask<BuildContext>
         {
             Directory.Delete(context.ArtifactsDirectory.FullPath, true);
         }
-        else
-        {
-            Directory.CreateDirectory(context.ArtifactsDirectory.FullPath);
-        }
+        Directory.CreateDirectory(context.ArtifactsDirectory.FullPath);
 
         context.Log.Information($"Deleted artifacts folder {context.ArtifactsDirectory}");
 
