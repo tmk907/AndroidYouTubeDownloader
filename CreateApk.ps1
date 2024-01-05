@@ -39,7 +39,7 @@ Function Build {
         $signingKeyPass
     )
 
-    dotnet publish -f:net6.0-android -c:Release /p:AndroidSigningKeyPass=$signingKeyPass /p:AndroidSigningStorePass=$signingKeyPass
+    dotnet publish -f:net8.0-android -c:Release /p:AndroidSigningKeyPass=$signingKeyPass /p:AndroidSigningStorePass=$signingKeyPass
 }
 
 Function CopyToLocalAppStore {
