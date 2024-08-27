@@ -49,7 +49,7 @@ Function CopyToLocalAppStore {
         $versionName
     )
 
-    $publishDirectory = '.\AndroidYouTubeDownloader\bin\Release\net6.0-android\publish'
+    $publishDirectory = '.\AndroidYouTubeDownloader\bin\Release\net8.0-android\publish'
     $appStoreDirectory = 'C:\Source\AppStore'
     $appName = 'AndroidYouTubeDownloader'
 

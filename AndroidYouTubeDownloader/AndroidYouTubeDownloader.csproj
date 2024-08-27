@@ -6,8 +6,8 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <ApplicationId>com.tmk907.AndroidYouTubeDownloader</ApplicationId>
-    <ApplicationVersion>16</ApplicationVersion>
-    <ApplicationDisplayVersion>1.3.10</ApplicationDisplayVersion>
+    <ApplicationVersion>18</ApplicationVersion>
+    <ApplicationDisplayVersion>1.3.11</ApplicationDisplayVersion>
   </PropertyGroup>
 
   <ItemGroup>
