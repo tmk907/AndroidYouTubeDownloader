@@ -20,10 +20,10 @@ public sealed class CopyArtifactsTask : FrostingTask<BuildContext>
 
         context.Log.Information($"Deleted artifacts folder {context.ArtifactsDirectory}");
 
-        DirectoryPath publishDirectory = context.RootDirectory.Combine(@".\AndroidYouTubeDownloader\bin\Release\net8.0-android\publish");
+        DirectoryPath publishDirectory = context.RootDirectory.Combine(@".\AndroidYouTubeDownloader\bin\Release\net9.0-android\publish");
         var appName = "AndroidYouTubeDownloader";
         var package = context.GetApplicationId();
-        var architectures = new[] { "arm64-v8a", "armeabi-v7a", "x86_64" };
+        var architectures = new[] { "arm64-v8a", "x86_64" };
 
         foreach (var arch in architectures)
         {

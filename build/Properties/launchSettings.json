@@ -2,7 +2,7 @@
   "profiles": {
     "Build": {
       "commandName": "Project",
-      "commandLineArgs": "--target=Publish --appVersion=1.3.10 --SigningKeyPass=LeLCXqvYlQGVhudmf4KJ"
+      "commandLineArgs": "--target=Publish --appVersion=1.3.12 --SigningKeyPass=LeLCXqvYlQGVhudmf4KJ"
     }
   }
 }

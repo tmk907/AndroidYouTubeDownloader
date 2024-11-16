@@ -39,7 +39,7 @@ Function Build {
         $signingKeyPass
     )
 
-    dotnet publish -f:net8.0-android -c:Release /p:AndroidSigningKeyPass=$signingKeyPass /p:AndroidSigningStorePass=$signingKeyPass
+    dotnet publish -f:net9.0-android -c:Release /p:AndroidSigningKeyPass=$signingKeyPass /p:AndroidSigningStorePass=$signingKeyPass
 }
 
 Function CopyToLocalAppStore {
@@ -49,12 +49,12 @@ Function CopyToLocalAppStore {
         $versionName
     )
 
-    $publishDirectory = '.\AndroidYouTubeDownloader\bin\Release\net8.0-android\publish'
+    $publishDirectory = '.\AndroidYouTubeDownloader\bin\Release\net9.0-android\publish'
     $appStoreDirectory = 'C:\Source\AppStore'
     $appName = 'AndroidYouTubeDownloader'
 
     $package = 'com.tmk907.androidyoutubedownloader'
-    $architectures = @('arm64-v8a','armeabi-v7a','x86_64')
+    $architectures = @('arm64-v8a','x86_64')
 
     foreach($arch in $architectures){
         $apkName = "$package-$arch-Signed.apk"
