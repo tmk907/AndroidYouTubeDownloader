@@ -20,10 +20,7 @@ Android app for downloading audio and videos from Youtube.
 
 ## Build 
 
-Run build script
-```
-.\CreateApk.ps1 -newVersionName 'x.y' -signingKeyPass 'mypassword'
-```
+Update `appVersion` in `build\Properties\launchSettings.json` and run Build project.
 
 ## Build ffmpeg-kit
 
